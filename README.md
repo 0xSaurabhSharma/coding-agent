@@ -18,3 +18,6 @@ echo ".python-version" >> .gitignore
 
 # 6. Create environment variable template
 echo "OPENROUTER_API_KEY=your_actual_key_here" > .env.example
+
+
+
