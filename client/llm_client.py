@@ -1,5 +1,6 @@
 from typing import Any, AsyncGenerator
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, RateLimitError, APIError, APIConnectionError
+import asyncio
 import os 
 from dotenv import load_dotenv
 
@@ -10,14 +11,18 @@ load_dotenv()
 class LLMClient:
     def __init__(self) -> None:
         self._client : AsyncOpenAI | None = None 
+        self._max_attempt: int = 3
 
     def get_client(self) -> AsyncOpenAI:
         if self._client is None:
             self._client = AsyncOpenAI(
                 base_url=os.getenv("OPENROUTER_BASE_URL"),
                 api_key=os.getenv("OPENROUTER_API_KEY")
+                # base_url=os.getenv("OPENROUTER_BASE_URL"),
+                # api_key=os.getenv("OPENROUTER_API_KEY")
             )
             return self._client
+        return self._client
 
     async def close(self) -> None:
         if self._client:
@@ -31,20 +36,59 @@ class LLMClient:
         ) -> AsyncGenerator[StreamEvent, None]:
         client = self.get_client()
         kwargs = {
-            "model": "google/gemma-3-27b-it:free",
+            # groq
+            "model": "openai/gpt-oss-20b", 
+            # openrouter
+            # "model": "google/gemma-3-27b-it:free",
             # "model": "nvidia/nemotron-3-super-120b-a12b:free",
             "messages": messages,
             "stream": stream
         }
 
-        if stream :
-            async for event in self._stream_response(client, kwargs):
-                yield event
-        else: 
-            event = await self._non_stream_response(client, kwargs)
-            yield event 
+        for attempt in range(self._max_attempt+1):
+            try:
+                if stream :
+                    async for event in self._stream_response(client, kwargs):
+                        yield event
+                else: 
+                    event = await self._non_stream_response(client, kwargs)
+                    yield event 
 
-        return
+                return
+            
+            except RateLimitError as e:
+                # wait time backoff | we will wait till it 
+                if attempt < self._max_attempt:
+                    wait_time = 2**attempt
+                    await asyncio.sleep(wait_time)
+                else:
+                    yield StreamEvent(
+                        type=EventType.ERROR,
+                        error=f"Rate Limit Exceeded: {e}"
+                    )
+                    return 
+            
+            except APIConnectionError as e:
+                if attempt < self._max_attempt:
+                    wait_time = 2**attempt
+                    await asyncio.sleep(wait_time)
+                else:
+                    yield StreamEvent(
+                        error=f"API Connection Error: {e}",
+                        type=EventType.ERROR
+                    )
+                    return
+            
+            except APIError as e:
+                # not retrying as llm api itself is not working properly
+                yield StreamEvent(
+                    error=f"API Connection Error: {e}",
+                    type=EventType.ERROR
+                )
+                return
+
+
+            
 
     async def _stream_response(
             self,

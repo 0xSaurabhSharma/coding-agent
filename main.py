@@ -12,7 +12,7 @@ async def main():
     # res = await client.chat_completion(messages, False)
 
     print('---')
-    async for event in client.chat_completion(messages, True):
+    async for event in client.chat_completion(messages, False):
         print(event)
 
     print('---')
