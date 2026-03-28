@@ -4,7 +4,7 @@ import asyncio
 import os 
 from dotenv import load_dotenv
 
-from client.response import TokenUsage, StreamEvent, TextDelta, EventType
+from client.response import TokenUsage, StreamEvent, TextDelta, StreamEventType
 
 load_dotenv()
 
@@ -63,7 +63,7 @@ class LLMClient:
                     await asyncio.sleep(wait_time)
                 else:
                     yield StreamEvent(
-                        type=EventType.ERROR,
+                        type=StreamEventType.ERROR,
                         error=f"Rate Limit Exceeded: {e}"
                     )
                     return 
@@ -75,7 +75,7 @@ class LLMClient:
                 else:
                     yield StreamEvent(
                         error=f"API Connection Error: {e}",
-                        type=EventType.ERROR
+                        type=StreamEventType.ERROR
                     )
                     return
             
@@ -83,7 +83,7 @@ class LLMClient:
                 # not retrying as llm api itself is not working properly
                 yield StreamEvent(
                     error=f"API Connection Error: {e}",
-                    type=EventType.ERROR
+                    type=StreamEventType.ERROR
                 )
                 return
 
@@ -121,14 +121,14 @@ class LLMClient:
 
                 if delta.content:
                     yield StreamEvent(
-                        type=EventType.TEXT_DELTA,
+                        type=StreamEventType.TEXT_DELTA,
                         text_delta=TextDelta(content=delta.content),
                         # finish_reason=finish_reason,
                         # usage=usage
                     )
             
             yield StreamEvent(
-                type=EventType.MESSAGE_COMPLETE,
+                type=StreamEventType.MESSAGE_COMPLETE,
                 # text_delta=TextDelta(content=delta.content),
                 finish_reason=finish_reason,
                 usage=usage
@@ -154,7 +154,7 @@ class LLMClient:
             )
         
         return StreamEvent(
-            type= EventType.MESSAGE_COMPLETE,
+            type= StreamEventType.MESSAGE_COMPLETE,
             text_delta = text_delta,
             finish_reason = choice.finish_reason,
             usage = usage,
