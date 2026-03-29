@@ -44,6 +44,11 @@ class CLI:
                 if assistant_streaming:
                     self.tui.close_assistant()
                 assistant_streaming = False 
+
+            elif event.type == AgentEventType.AGENT_ERROR:
+                error = event.data.get("error", "Unknown error occured.")
+                console.print(f"\n[error]Error: {error}[/error]")
+                # not closing agent streaming as it can be resolved in tool calls
             
         
         # print(arr)

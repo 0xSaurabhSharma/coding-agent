@@ -12,6 +12,8 @@ class Agent:
         yield AgentEvent.agent_start(message)
         # Add user message to context
 
+        final_response: str | None = None
+
         # before agent hooks 
         # after agent hooks 
         async for event in self._agentic_loop(message):
@@ -22,7 +24,7 @@ class Agent:
                 final_response = event.data.get("content")
 
         # when agent's execution stops 
-        yield AgentEvent.agent_end()
+        yield AgentEvent.agent_end(final_response)
 
 
     async def _agentic_loop (self, message: str ) -> AsyncGenerator[AgentEvent, None]:
