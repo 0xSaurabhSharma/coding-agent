@@ -1,3 +1,4 @@
+#tools/base.py
 from __future__ import annotations
 from pathlib import Path
 from abc import ABC, abstractmethod
@@ -5,8 +6,8 @@ from enum import Enum
 from dataclasses import dataclass, field
 from typing import Any
 from pydantic import BaseModel, ValidationError
-from pydantic.json_schema import models_json_schema
-
+from pydantic.json_schema import model_json_schema, model_json_schema
+# validation
 
 class ToolKind(str, Enum):
     """
@@ -24,6 +25,7 @@ class ToolInvocation:
     params: dict[str, Any]
     cwd: Path
 
+
 @dataclass
 class ToolResult:
     # win, op, err, meta ?
@@ -34,7 +36,7 @@ class ToolResult:
     truncated: bool = False
 
     @classmethod
-    def error_result(cls, error:str, output:str = "", *kwargs: Any):
+    def error_result(cls, error:str, output:str = "", **kwargs: Any):
         return cls(
             success=False,
             output=output,
@@ -50,9 +52,14 @@ class ToolResult:
             error=None,
             **kwargs,
         )
+    
+    @classmethod
+    def to_model_output(self) -> str:
+        if self.success:
+            return self.output
+        return f"Error: {self.error}\n\nOutput:\n{self.output}"
 
     
-
 @dataclass
 class ToolConformation:
     tool_name: str 
@@ -64,7 +71,6 @@ class Tool(ABC):
     name: str = "base_tool"
     description: str = "Base Tool"
     kind: ToolKind.READ
-    
     
     def __init__(self) -> None:
         pass
@@ -83,11 +89,9 @@ class Tool(ABC):
         """thh"""
         pass
 
-    @abstractmethod
     def validate_parameters(self, params: dict[str, Any]) -> list[str]:
         """
-            Validates llm's parameters before tool execution.
-                    
+            Validates llm's parameters before tool execution.                    
         """
         schema = self.schema 
         if isinstance(schema, type) and issubclass(schema, BaseModel):
@@ -109,7 +113,7 @@ class Tool(ABC):
 
     def is_mutating(self, params: dict[str, Any]) -> bool:
         return self.kind in { ToolKind.WRITE, ToolKind.NETWORK, ToolKind.SHELL, ToolKind.MEMORY }
-    
+
     async def get_conformation(self,invocation: ToolInvocation) -> ToolInvocation | None:
         if not self.is_mutating(invocation.params):
             return None
@@ -124,7 +128,7 @@ class Tool(ABC):
         schema = self.schema
 
         if isinstance(schema, type) and issubclass(schema, BaseModel):
-            json_schema = models_json_schema(schema, mode="serialization")
+            json_schema = model_json_schema(schema, mode="serialization")
 
             return {
                 "name": self.name,

@@ -29,6 +29,7 @@ class CLI:
         # arr = []
         
         async for event in self.agent.run(message):
+            print(event)
             # it will return events: start, delta, end, error, complete
             # print(event)
             if event.type == AgentEventType.TEXT_DELTA:

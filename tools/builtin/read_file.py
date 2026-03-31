@@ -1,12 +1,13 @@
+#tools/builtin/read_file.py
 from pydantic import BaseModel, Field
 
 from utils.path import resolve_path, is_binary_file
-from utils.text import count_tokens
+from utils.text import count_tokens, truncate_text
 from tools.base import Tool, ToolConformation, ToolInvocation, ToolKind, ToolResult
 
 
 class ReadFileParams(BaseModel):
-    path: str = Filed(
+    path: str = Field(
         ...,
         description="Path to the file to read (relative to working directory or absolute)",
     )
@@ -40,7 +41,7 @@ class ReadFileTool(Tool):
         # check path
         if not path.exists():
             return ToolResult.error_result(f"File not found: {path}")
-        if not path.exists():
+        if not path.is_file():
             return ToolResult.error_result(f"Path is not a file: {path}")
 
         # check size
