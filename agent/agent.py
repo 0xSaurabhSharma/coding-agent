@@ -1,4 +1,5 @@
 from __future__ import annotations
+from pathlib import Path
 from typing import AsyncGenerator
 from client.response import StreamEventType, ToolCall, ToolResultMessage
 from client.llm_client import LLMClient
@@ -76,13 +77,13 @@ class Agent:
         for tc in tool_calls:
             # telling ui by event
             yield AgentEvent.tool_call_start(
-                call_id=tc["call_id"],
-                name=tc["name"],
-                arguments=tc["arguments"]
+                call_id=tc.call_id,
+                name=tc.name,
+                arguments=tc.arguments
             )
 
             # execution
-            result = await self.tool_registry.invoke(tc.name, tc.arguments, Path.cwd)
+            result = await self.tool_registry.invoke(tc.name, tc.arguments, Path.cwd())
             yield AgentEvent.tool_call_complete(
                 tc.call_id,
                 tc.name,

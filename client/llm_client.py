@@ -166,7 +166,7 @@ class LLMClient:
                                 tool_calls[idx]["name"] = tc_delta.function.name
                                 yield StreamEvent(
                                     type=StreamEventType.TOOL_CALL_START,
-                                    tc_delta = ToolCallDelta(
+                                    tool_call_delta = ToolCallDelta(
                                         call_id=tool_calls[idx]['id'],
                                         name=tc_delta.function.name
                                     )
@@ -176,7 +176,7 @@ class LLMClient:
                                 tool_calls[idx]['arguments'] += tc_delta.function.arguments
                                 yield StreamEvent(
                                     type=StreamEventType.TOOL_CALL_DELTA,
-                                    tc_delta = ToolCallDelta(
+                                    tool_call_delta = ToolCallDelta(
                                         call_id=tool_calls[idx]['id'],
                                         name=tc_delta.function.name,
                                         arguments_delta=tc_delta.function.arguments,

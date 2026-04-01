@@ -94,11 +94,11 @@ class ReadFileTool(Tool):
             selected_lines = lines[start_idx:end_idx]
             formatted_lines = []
             for i, line in enumerate(selected_lines, start=start_idx + 1):
-                formatted_lines.append(f"{i:6}|{line}")
+                formatted_lines.append(f"{i:6} | {line}")
             output = "\n".join(formatted_lines)
 
             # truncate as per token count
-            token_count = count_tokens(output)
+            token_count = count_tokens(output, "cl100k_base")
             truncated = False
             if token_count > self.MAX_OUTPUT_TOKENS:
                 output = truncate_text(

@@ -54,7 +54,7 @@ class ContextManager:
 
     def add_tool_message(self, tool_call_id: str, content: str) -> None:
         item = MessageItem(
-            roll="tool",
+            role="tool",
             content=content,
             tool_call_id=tool_call_id,
             token_count=count_tokens(content, self._model_name)
